@@ -1,0 +1,55 @@
+# Environment
+.env
+.env.local
+.env*.local
+.mcp.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# Node
+node_modules/
+.next/
+out/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Database
+*.db
+*.sqlite
+
+# Tests
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Docker
+*.env.docker
+
+# Temporary
+tmp/
+temp/
+*.tmp

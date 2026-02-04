@@ -1,0 +1,16 @@
+# v0.1.0 - 2026-02-04
+
+## MSG - AI Messenger MVP
+
+### 초기 설정
+- 프로젝트 구조 생성
+- Supabase 연동 (Auth, DB, Storage)
+- Linear 이슈 관리 설정
+- Claude CLI 기반 AI 통합 준비
+
+### 기술 스택
+- Backend: FastAPI + Python 3.11
+- Frontend: Next.js 14 + TypeScript
+- Database: Supabase PostgreSQL
+- AI: Claude CLI (단일 계정 공유)
+- Deploy: Dokploy + Vercel
