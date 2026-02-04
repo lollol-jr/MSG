@@ -73,6 +73,7 @@ export async function registerChat(app: FastifyInstance, wsHub: any) {
         where: { roomId },
         orderBy: { createdAt: "asc" },
         take: 50,
+        include: { sender: true, agentInstance: true },
       });
 
       return {

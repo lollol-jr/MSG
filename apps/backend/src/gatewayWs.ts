@@ -24,25 +24,25 @@ export async function registerGatewayWs(
   app.get("/ws-gateway", { websocket: true }, (conn, req) => {
     const url = new URL(req.url ?? "", "http://localhost");
     const pairing = url.searchParams.get("pairing");
-    if (!pairing) return conn.socket.close();
+    if (!pairing) return conn.close();
 
     (async () => {
       const pc = await prisma.pairingCode.findUnique({
         where: { code: pairing },
       });
-      if (!pc) return conn.socket.close();
-      if (pc.expiresAt.getTime() < Date.now()) return conn.socket.close();
+      if (!pc) return conn.close();
+      if (pc.expiresAt.getTime() < Date.now()) return conn.close();
 
       await prisma.pairingCode.delete({ where: { code: pairing } });
 
       const userId = pc.userId;
-      gh.set(userId, conn.socket);
+      gh.set(userId, conn);
 
-      conn.socket.send(
+      conn.send(
         JSON.stringify({ type: "gateway.hello", userId }),
       );
 
-      conn.socket.onmessage = async (m) => {
+      conn.onmessage = async (m) => {
         try {
           const payload = JSON.parse(m.data.toString());
           if (payload?.type === "agent.result") {
@@ -72,7 +72,7 @@ export async function registerGatewayWs(
         } catch {}
       };
 
-      conn.socket.onclose = () => gh.remove(userId);
+      conn.onclose = () => gh.remove(userId);
     })();
   });
 }
