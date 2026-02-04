@@ -16,9 +16,10 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  rooms    RoomMember[]
-  messages Message[]
-  agents   AgentInstance[]
+  rooms      RoomMember[]
+  messages   Message[]
+  agents     AgentInstance[]
+  mcpServers McpServer[]
 
   @@unique([provider, providerId])
 }
@@ -94,4 +95,17 @@ model PairingCode {
   userId    String
   createdAt DateTime @default(now())
   expiresAt DateTime
+}
+
+model McpServer {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  command   String
+  args      Json?
+  envVars   Json?
+  status    String   @default("INSTALLED")
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
 }

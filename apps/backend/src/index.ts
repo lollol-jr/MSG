@@ -11,6 +11,8 @@ import { registerGatewayWs, gatewayHub } from "./gatewayWs.js";
 import { registerAgentRuntime } from "./agentRuntime.js";
 import { registerSocialAuth } from "./socialAuth.js";
 import { wsHub } from "./wsHub.js";
+import { registerMcp } from "./mcp.js";
+import { registerAgentsOnlyRoom } from "./agentsOnlyRoom.js";
 
 const app = Fastify({ logger: true });
 
@@ -33,8 +35,11 @@ await registerSocialAuth(app);
 await registerWs(app);
 await registerChat(app, wsHub);
 await registerAgents(app);
+await registerMcp(app);
+await registerAgentsOnlyRoom(app);
 
 const gh = gatewayHub();
+(app as any).gatewayHub = gh;
 await registerPairing(app);
 await registerGatewayWs(app, gh);
 await registerAgentRuntime(app, gh);

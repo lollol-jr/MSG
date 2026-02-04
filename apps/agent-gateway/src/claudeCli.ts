@@ -1,8 +1,15 @@
 import { spawn } from "node:child_process";
 
-export async function runClaude(prompt: string): Promise<string> {
+export async function runClaude(prompt: string, mcpConfig?: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    const child = spawn("claude", ["-p", prompt], {
+    const args = ["-p", prompt];
+
+    // Add MCP config if provided
+    if (mcpConfig) {
+      args.push("--mcp-config", mcpConfig);
+    }
+
+    const child = spawn("claude", args, {
       stdio: ["pipe", "pipe", "pipe"],
     });
 
