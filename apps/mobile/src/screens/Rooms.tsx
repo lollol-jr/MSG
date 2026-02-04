@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import {
   View,
   FlatList,
+  ScrollView,
   Pressable,
   Text,
   StyleSheet,
@@ -114,12 +115,14 @@ export default function Rooms({ navigation }: any) {
           </Pressable>
         ) : (
           <View style={styles.agentList}>
-            {agents.map((a) => (
-              <View key={a.id} style={styles.agentItem}>
-                <Text style={styles.agentName}>{a.name}</Text>
-                <Text style={styles.agentProvider}>{a.provider}</Text>
-              </View>
-            ))}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.agentScroll}>
+              {agents.map((a) => (
+                <View key={a.id} style={styles.agentChip}>
+                  <Text style={styles.agentName}>{a.name}</Text>
+                  <Text style={styles.agentProvider}>{a.provider}</Text>
+                </View>
+              ))}
+            </ScrollView>
             <View style={styles.row}>
               <Pressable style={styles.btnSmall} onPress={handleCreateAgent}>
                 <Text style={styles.btnSmallText}>+ Agent 추가</Text>
@@ -203,15 +206,19 @@ const styles = StyleSheet.create({
   },
   sectionTitle: { fontSize: 16, fontWeight: "700", color: "#333" },
   agentList: { marginTop: 8, gap: 8 },
-  agentItem: {
+  agentScroll: { flexGrow: 0 },
+  agentChip: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    padding: 10,
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     backgroundColor: "#fff",
-    borderRadius: 8,
+    borderRadius: 20,
+    marginRight: 8,
   },
-  agentName: { fontSize: 14, fontWeight: "600" },
-  agentProvider: { fontSize: 12, color: "#666", marginTop: 2 },
+  agentName: { fontSize: 13, fontWeight: "600" },
+  agentProvider: { fontSize: 11, color: "#888" },
   row: { flexDirection: "row", gap: 8 },
   btnPrimary: {
     marginTop: 8,
