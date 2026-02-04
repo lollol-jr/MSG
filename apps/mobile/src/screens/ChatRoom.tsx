@@ -4,8 +4,10 @@ import {
   FlatList,
   Text,
   TextInput,
-  Button,
+  Pressable,
   StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { listMessages, sendMessage } from "../api";
 import { getToken } from "../storage";
@@ -49,8 +51,33 @@ export default function ChatRoom({ route }: any) {
     };
   }, [roomId, wsUrl]);
 
+  const handleSend = async () => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    setText("");
+    try {
+      await sendMessage(roomId, trimmed);
+    } catch {}
+  };
+
+  const getSenderInfo = (item: any) => {
+    if (item.senderType === "AGENT") {
+      const name = item.agentInstance?.name ?? "AI Agent";
+      return { name, isAgent: true, isSystem: false };
+    }
+    if (item.senderType === "SYSTEM" || item.kind === "SYSTEM") {
+      return { name: "System", isAgent: false, isSystem: true };
+    }
+    const name = item.sender?.name ?? "User";
+    return { name, isAgent: false, isSystem: false };
+  };
+
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={90}
+    >
       <FlatList
         ref={flatListRef}
         data={messages}
@@ -58,57 +85,99 @@ export default function ChatRoom({ route }: any) {
         onContentSizeChange={() =>
           flatListRef.current?.scrollToEnd({ animated: true })
         }
-        renderItem={({ item }) => (
-          <View
-            style={[
-              styles.msgBubble,
-              item.senderType === "AGENT" && styles.agentBubble,
-            ]}
-          >
-            <Text style={styles.msgSender}>
-              {item.senderType === "AGENT" ? "AI Agent" : "You"}
-            </Text>
-            <Text>{item.text}</Text>
-          </View>
-        )}
+        ListEmptyComponent={
+          <Text style={styles.empty}>
+            메시지가 없습니다.{"\n"}@agent를 포함하면 AI가 응답합니다.
+          </Text>
+        }
+        renderItem={({ item }) => {
+          const { name, isAgent, isSystem } = getSenderInfo(item);
+          return (
+            <View
+              style={[
+                styles.msgBubble,
+                isAgent && styles.agentBubble,
+                isSystem && styles.systemBubble,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.msgSender,
+                  isAgent && styles.agentSender,
+                  isSystem && styles.systemSender,
+                ]}
+              >
+                {name}
+              </Text>
+              <Text style={isSystem ? styles.systemText : undefined}>
+                {item.text}
+              </Text>
+            </View>
+          );
+        }}
       />
       <View style={styles.inputRow}>
         <TextInput
           value={text}
           onChangeText={setText}
           style={styles.input}
-          placeholder="Type a message..."
+          placeholder="메시지 입력... (@agent로 AI 호출)"
+          returnKeyType="send"
+          onSubmitEditing={handleSend}
         />
-        <Button
-          title="Send"
-          onPress={async () => {
-            if (!text.trim()) return;
-            await sendMessage(roomId, text);
-            setText("");
-          }}
-        />
+        <Pressable style={styles.sendBtn} onPress={handleSend}>
+          <Text style={styles.sendBtnText}>Send</Text>
+        </Pressable>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
+  container: { flex: 1, backgroundColor: "#fff" },
   msgBubble: {
     paddingVertical: 8,
     paddingHorizontal: 12,
     backgroundColor: "#f0f0f0",
-    borderRadius: 8,
+    borderRadius: 10,
     marginBottom: 6,
+    marginHorizontal: 16,
   },
   agentBubble: { backgroundColor: "#e8f0fe" },
-  msgSender: { fontWeight: "600", fontSize: 12, marginBottom: 2 },
-  inputRow: { flexDirection: "row", gap: 8, alignItems: "center" },
+  systemBubble: { backgroundColor: "#fff3cd", alignSelf: "center" },
+  msgSender: { fontWeight: "600", fontSize: 12, marginBottom: 2, color: "#333" },
+  agentSender: { color: "#4A6CF7" },
+  systemSender: { color: "#856404" },
+  systemText: { color: "#856404", fontStyle: "italic", fontSize: 13 },
+  inputRow: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "center",
+    padding: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#eee",
+  },
   input: {
     flex: 1,
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: "#ddd",
     padding: 12,
-    borderRadius: 8,
+    borderRadius: 20,
+    fontSize: 15,
+    backgroundColor: "#f8f9fa",
+  },
+  sendBtn: {
+    backgroundColor: "#4A6CF7",
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    borderRadius: 20,
+  },
+  sendBtnText: { color: "#fff", fontWeight: "600" },
+  empty: {
+    textAlign: "center",
+    color: "#aaa",
+    marginTop: 60,
+    fontSize: 14,
+    lineHeight: 22,
   },
 });

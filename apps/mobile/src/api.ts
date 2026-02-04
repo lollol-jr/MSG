@@ -65,7 +65,16 @@ export async function listAgents() {
 }
 
 export async function createPairingCode() {
+  const token = await getToken();
   const res = await fetch(`${API_BASE}/pairing/create`, {
+    method: "POST",
+    headers: token ? { authorization: `Bearer ${token}` } : {},
+  });
+  return res.json();
+}
+
+export async function inviteAgentToRoom(roomId: string, agentId: string) {
+  const res = await fetch(`${API_BASE}/rooms/${roomId}/agents/${agentId}/invite`, {
     method: "POST",
     headers: await headers(),
   });
