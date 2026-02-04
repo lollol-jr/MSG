@@ -106,6 +106,8 @@ export async function registerChat(app: FastifyInstance, wsHub: any) {
         },
       });
 
+      await (app as any).invokeAgentIfNeeded?.(body.roomId, userId, body.text);
+
       wsHub.broadcastRoom(body.roomId, {
         event: "message.new",
         data: {

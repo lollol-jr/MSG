@@ -6,6 +6,10 @@ import { registerAuth } from "./auth.js";
 import { registerWs } from "./ws.js";
 import { registerChat } from "./chat.js";
 import { registerAgents } from "./agents.js";
+import { registerPairing } from "./pairing.js";
+import { registerGatewayWs, gatewayHub } from "./gatewayWs.js";
+import { registerAgentRuntime } from "./agentRuntime.js";
+import { registerSocialAuth } from "./socialAuth.js";
 import { wsHub } from "./wsHub.js";
 
 const app = Fastify({ logger: true });
@@ -22,10 +26,18 @@ app.decorate("authenticate", async function (req: any, reply: any) {
   }
 });
 
+(app as any).wsHub = wsHub;
+
 await registerAuth(app);
+await registerSocialAuth(app);
 await registerWs(app);
 await registerChat(app, wsHub);
 await registerAgents(app);
+
+const gh = gatewayHub();
+await registerPairing(app);
+await registerGatewayWs(app, gh);
+await registerAgentRuntime(app, gh);
 
 app.get("/health", async () => ({ ok: true }));
 
