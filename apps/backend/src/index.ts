@@ -5,6 +5,7 @@ import websocket from "@fastify/websocket";
 import { registerAuth } from "./auth.js";
 import { registerWs } from "./ws.js";
 import { registerChat } from "./chat.js";
+import { registerAgents } from "./agents.js";
 import { wsHub } from "./wsHub.js";
 
 const app = Fastify({ logger: true });
@@ -24,6 +25,7 @@ app.decorate("authenticate", async function (req: any, reply: any) {
 await registerAuth(app);
 await registerWs(app);
 await registerChat(app, wsHub);
+await registerAgents(app);
 
 app.get("/health", async () => ({ ok: true }));
 
