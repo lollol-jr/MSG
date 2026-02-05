@@ -1,6 +1,9 @@
 """환경변수 설정"""
 from pydantic_settings import BaseSettings
-from functools import lru_cache
+
+
+# 캐시 없이 매번 새로 생성 (환경변수 업데이트 반영)
+_settings_cache = None
 
 
 class Settings(BaseSettings):
@@ -48,7 +51,9 @@ class Settings(BaseSettings):
         extra = "ignore"  # 추가 필드 무시
 
 
-@lru_cache()
 def get_settings() -> Settings:
-    """설정 싱글톤"""
-    return Settings()
+    """설정 싱글톤 (수동 캐싱)"""
+    global _settings_cache
+    if _settings_cache is None:
+        _settings_cache = Settings()
+    return _settings_cache
