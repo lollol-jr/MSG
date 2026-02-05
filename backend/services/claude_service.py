@@ -8,12 +8,21 @@ class ClaudeService:
     """Anthropic API를 사용하여 AI 응답 생성"""
 
     def __init__(self):
-        api_key = os.getenv("ANTHROPIC_API_KEY")
-        if not api_key:
-            raise ValueError("ANTHROPIC_API_KEY 환경변수가 설정되지 않았습니다.")
-
-        self.client = AsyncAnthropic(api_key=api_key)
+        self.client = None
         self.model = "claude-3-5-sonnet-20241022"
+
+    def _ensure_client(self):
+        """클라이언트 lazy initialization"""
+        if self.client is None:
+            from config import get_settings
+            settings = get_settings()
+
+            # 설정에서 API 키 가져오기
+            api_key = settings.anthropic_api_key
+            if not api_key:
+                raise ValueError("ANTHROPIC_API_KEY 환경변수가 설정되지 않았습니다.")
+
+            self.client = AsyncAnthropic(api_key=api_key)
 
     async def chat(
         self,
@@ -31,6 +40,9 @@ class ClaudeService:
             AI 응답 청크 (스트리밍)
         """
         try:
+            # 클라이언트 초기화 (lazy)
+            self._ensure_client()
+
             # 스트리밍 응답 요청
             async with self.client.messages.stream(
                 model=self.model,
@@ -44,6 +56,9 @@ class ClaudeService:
                     yield text
 
         except Exception as e:
+            import traceback
+            error_detail = traceback.format_exc()
+            print(f"Claude API Error: {error_detail}")
             yield f"\n⚠️ Error: {str(e)}"
 
 

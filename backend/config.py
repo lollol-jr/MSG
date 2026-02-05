@@ -11,6 +11,9 @@ class Settings(BaseSettings):
     supabase_anon_key: str
     supabase_service_role_key: str
 
+    # Anthropic
+    anthropic_api_key: str
+
     # API
     api_port: int = 8000
     api_host: str = "0.0.0.0"
