@@ -6,13 +6,14 @@ import { useRouter } from 'next/navigation';
 import MessageList from '@/components/chat/MessageList';
 import MessageInput from '@/components/chat/MessageInput';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 export default function ChatPage() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [messages, setMessages] = useState<any[]>([]);
   const [streaming, setStreaming] = useState(false);
   const [currentStream, setCurrentStream] = useState('');
-  const [ws, setWs] = useState<WebSocket | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -27,62 +28,63 @@ export default function ChatPage() {
     }
     setUser(user);
     setLoading(false);
-
-    // WebSocket 연결
-    connectWebSocket(user.id);
   };
 
-  const connectWebSocket = (userId: string) => {
-    const wsUrl = `ws://localhost:8000/api/chat/ws?user_id=${userId}`;
-    const websocket = new WebSocket(wsUrl);
-
-    websocket.onopen = () => {
-      console.log('WebSocket connected');
-    };
-
-    websocket.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-
-      if (data.type === 'stream') {
-        setCurrentStream(prev => prev + data.content);
-        setStreaming(true);
-      } else if (data.type === 'done') {
-        setMessages(prev => [...prev, {
-          role: 'assistant',
-          content: data.content,
-          id: data.message_id
-        }]);
-        setCurrentStream('');
-        setStreaming(false);
-      } else if (data.type === 'error') {
-        alert('오류: ' + data.message);
-        setStreaming(false);
-      }
-    };
-
-    websocket.onerror = (error) => {
-      console.error('WebSocket error:', error);
-    };
-
-    websocket.onclose = () => {
-      console.log('WebSocket disconnected');
-    };
-
-    setWs(websocket);
-  };
-
-  const handleSendMessage = (message: string, files: File[]) => {
-    if (!ws || !message.trim()) return;
+  const handleSendMessage = async (message: string, files: File[]) => {
+    if (!message.trim() || streaming) return;
 
     // 사용자 메시지 추가
     setMessages(prev => [...prev, { role: 'user', content: message }]);
+    setStreaming(true);
+    setCurrentStream('');
 
-    // 서버로 전송
-    ws.send(JSON.stringify({
-      type: 'message',
-      content: message,
-      files: []  // TODO: 파일 업로드 구현
-    }));
+    try {
+      // HTTP POST 요청
+      const response = await fetch(`${API_URL}/api/chat/stream`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: user.id,
+          message: message,
+          files: []
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('채팅 요청 실패');
+      }
+
+      // 스트리밍 응답 처리
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let fullResponse = '';
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value);
+          fullResponse += chunk;
+          setCurrentStream(fullResponse);
+        }
+      }
+
+      // 완료된 응답 메시지 추가
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: fullResponse
+      }]);
+      setCurrentStream('');
+      setStreaming(false);
+
+    } catch (error) {
+      console.error('Chat error:', error);
+      alert('메시지 전송 중 오류가 발생했습니다.');
+      setStreaming(false);
+    }
   };
 
   const handleLogout = async () => {

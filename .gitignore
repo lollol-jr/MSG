@@ -43,3 +43,13 @@ logs/
 tmp/
 temp/
 *.tmp
+
+# MCP config (contains API keys)
+.mcp.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python

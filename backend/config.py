@@ -16,7 +16,12 @@ class Settings(BaseSettings):
     api_host: str = "0.0.0.0"
 
     # CORS
-    cors_origins: list[str] = ["http://localhost:3000", "http://localhost:3001"]
+    cors_origins: list[str] = [
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "https://frontend-two-beige-80.vercel.app",
+        "https://frontend-5jq47q6h1-0510s-projects.vercel.app"
+    ]
 
     # 파일 업로드
     max_file_size_mb: int = 10

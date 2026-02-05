@@ -1,5 +1,7 @@
-"""채팅 API - WebSocket"""
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
+"""채팅 API - WebSocket & HTTP Streaming"""
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, Request
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 from database import (
     save_message,
     get_conversation_messages,
@@ -11,6 +13,13 @@ import json
 
 router = APIRouter()
 claude_service = get_claude_service()
+
+
+class ChatRequest(BaseModel):
+    user_id: str
+    message: str
+    conversation_id: str = None
+    files: list[str] = []
 
 
 @router.websocket("/ws")
@@ -141,3 +150,36 @@ async def send_message_http(
         "message_id": message["id"] if message else None,
         "content": full_response
     }
+
+
+@router.post("/stream")
+async def stream_chat(request: ChatRequest):
+    """
+    HTTP POST 스트리밍 방식 채팅
+
+    배포 환경에서 WebSocket보다 안정적
+    """
+    async def generate():
+        try:
+            # 대화 ID 없으면 새로 생성
+            conversation_id = request.conversation_id
+            if not conversation_id:
+                conversation = await create_conversation(request.user_id, "New Chat")
+                conversation_id = conversation["id"]
+
+            # 사용자 메시지 저장
+            await save_message(conversation_id, "user", request.message)
+
+            # Claude API 호출 및 스트리밍
+            full_response = ""
+            async for chunk in claude_service.chat(request.message, request.files):
+                full_response += chunk
+                yield chunk
+
+            # AI 응답 저장
+            await save_message(conversation_id, "assistant", full_response)
+
+        except Exception as e:
+            yield f"\n⚠️ Error: {str(e)}"
+
+    return StreamingResponse(generate(), media_type="text/plain")
