@@ -1,27 +1,35 @@
 """Supabase 데이터베이스 연결"""
 from supabase import create_client, Client
 from config import get_settings
-from functools import lru_cache
 
-settings = get_settings()
+# 캐시 없이 매번 새로 생성 (환경변수 업데이트 반영)
+_client_cache = None
+_anon_client_cache = None
 
 
-@lru_cache()
 def get_supabase_client() -> Client:
-    """Supabase 클라이언트 싱글톤"""
-    return create_client(
-        settings.supabase_url,
-        settings.supabase_service_role_key
-    )
+    """Supabase 클라이언트"""
+    global _client_cache
+    if _client_cache is None:
+        settings = get_settings()
+        print(f"[DEBUG] Creating Supabase client with key: {settings.supabase_service_role_key[:30]}...")
+        _client_cache = create_client(
+            settings.supabase_url,
+            settings.supabase_service_role_key
+        )
+    return _client_cache
 
 
-@lru_cache()
 def get_supabase_anon_client() -> Client:
     """Supabase 익명 클라이언트 (프론트엔드용)"""
-    return create_client(
-        settings.supabase_url,
-        settings.supabase_anon_key
-    )
+    global _anon_client_cache
+    if _anon_client_cache is None:
+        settings = get_settings()
+        _anon_client_cache = create_client(
+            settings.supabase_url,
+            settings.supabase_anon_key
+        )
+    return _anon_client_cache
 
 
 async def verify_user_token(token: str) -> dict | None:
