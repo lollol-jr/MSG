@@ -1,3 +1,13 @@
+# v0.1.1 - 2026-02-05
+
+## 버그 수정
+- profiles 테이블 스키마 불일치 수정
+  - `email` 컬럼 → `display_name` 컬럼으로 변경
+  - backend/api/chat.py: 프로필 생성 시 스키마 일치
+  - backend/api/auth.py: 토큰 검증 응답 필드 수정
+
+---
+
 # v0.1.0 - 2026-02-04
 
 ## MSG - AI Messenger MVP

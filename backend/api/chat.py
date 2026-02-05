@@ -174,7 +174,7 @@ async def stream_chat(request: ChatRequest):
                     # 프로필 생성
                     supabase.table("profiles").insert({
                         "id": request.user_id,
-                        "email": f"{request.user_id}@temp.com"
+                        "display_name": f"User {request.user_id[:8]}"
                     }).execute()
 
                 conversation = await create_conversation(request.user_id, "New Chat")

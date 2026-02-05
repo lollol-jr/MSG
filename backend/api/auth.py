@@ -42,5 +42,5 @@ async def verify_token(user: dict = Depends(get_current_user)):
     return {
         "valid": True,
         "user_id": user["id"],
-        "email": user.get("email")
+        "display_name": user.get("display_name")
     }
