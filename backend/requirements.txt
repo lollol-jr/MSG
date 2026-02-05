@@ -4,8 +4,9 @@ uvicorn[standard]==0.27.0
 python-multipart==0.0.6
 websockets==12.0
 
-# Supabase
-supabase>=2.10.0
+# Supabase (호환 버전)
+supabase==2.3.0
+httpx==0.24.1
 
 # 환경변수
 python-dotenv==1.0.0
@@ -22,5 +23,5 @@ passlib[bcrypt]==1.7.4
 # CORS
 fastapi-cors==0.0.6
 
-# Anthropic API
-anthropic>=0.50.0
+# Anthropic API (호환 버전)
+anthropic==0.42.0
