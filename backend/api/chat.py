@@ -164,10 +164,26 @@ async def stream_chat(request: ChatRequest):
             # 대화 ID 없으면 새로 생성
             conversation_id = request.conversation_id
             if not conversation_id:
+                # 프로필이 없으면 먼저 생성
+                from database import get_supabase_client
+                supabase = get_supabase_client()
+
+                # 프로필 확인 및 생성
+                profile_result = supabase.table("profiles").select("*").eq("id", request.user_id).execute()
+                if not profile_result.data:
+                    # 프로필 생성
+                    supabase.table("profiles").insert({
+                        "id": request.user_id,
+                        "email": f"{request.user_id}@temp.com"
+                    }).execute()
+
                 conversation = await create_conversation(request.user_id, "New Chat")
+                if not conversation:
+                    yield "⚠️ 대화를 생성할 수 없습니다. 잠시 후 다시 시도해주세요."
+                    return
                 conversation_id = conversation["id"]
 
-            # 사용자 메시지 저장
+            # 사용자 메시지 저장 (실패해도 계속 진행)
             await save_message(conversation_id, "user", request.message)
 
             # Claude API 호출 및 스트리밍
@@ -176,10 +192,14 @@ async def stream_chat(request: ChatRequest):
                 full_response += chunk
                 yield chunk
 
-            # AI 응답 저장
-            await save_message(conversation_id, "assistant", full_response)
+            # AI 응답 저장 (실패해도 무시)
+            if conversation_id:
+                await save_message(conversation_id, "assistant", full_response)
 
         except Exception as e:
+            import traceback
+            error_detail = traceback.format_exc()
+            print(f"Stream error: {error_detail}")
             yield f"\n⚠️ Error: {str(e)}"
 
     return StreamingResponse(generate(), media_type="text/plain")
