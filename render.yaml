@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: msg-backend
+    env: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    region: singapore
+    plan: free
+    branch: main
+    healthCheckPath: /health
+    envVars:
+      - key: SUPABASE_URL
+        value: https://dcrylsktmuttokoaoixf.supabase.co
+      - key: SUPABASE_ANON_KEY
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjcnlsc2t0bXV0dG9rb2FvaXhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxNzk5MTEsImV4cCI6MjA4NTc1NTkxMX0.aj_6lUtEZsQ5xrvYvJVqhJxemLE9F_OVpDMZS4B2sTU
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: API_PORT
+        value: 8000
+      - key: API_HOST
+        value: 0.0.0.0
