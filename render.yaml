@@ -14,6 +14,8 @@ services:
       - key: SUPABASE_ANON_KEY
         value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjcnlsc2t0bXV0dG9rb2FvaXhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxNzk5MTEsImV4cCI6MjA4NTc1NTkxMX0.aj_6lUtEZsQ5xrvYvJVqhJxemLE9F_OVpDMZS4B2sTU
       - key: SUPABASE_SERVICE_ROLE_KEY
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjcnlsc2t0bXV0dG9rb2FvaXhmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDE3OTkxMSwiZXhwIjoyMDg1NzU1OTExfQ.7EZV6FhNM4tfcgiFTBU-0bFudSXPhVvpPakG5wRDNtQ
+      - key: ANTHROPIC_API_KEY
         sync: false
       - key: API_PORT
         value: 8000

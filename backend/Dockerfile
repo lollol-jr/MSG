@@ -3,16 +3,6 @@ FROM python:3.11-slim
 # 작업 디렉토리
 WORKDIR /app
 
-# 시스템 패키지 업데이트 및 Node.js 설치
-RUN apt-get update && apt-get install -y \
-    curl \
-    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs \
-    && rm -rf /var/lib/apt/lists/*
-
-# Claude CLI 설치 (npm 사용)
-RUN npm install -g @anthropic-ai/cli
-
 # Python 의존성 설치
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
