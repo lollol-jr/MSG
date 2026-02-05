@@ -1,28 +1,26 @@
-"""Claude API 서비스 - Anthropic SDK 사용"""
+"""Claude API 서비스 - 직접 HTTP 호출"""
 import os
+import httpx
 from typing import AsyncGenerator
-from anthropic import AsyncAnthropic
+import json
 
 
 class ClaudeService:
-    """Anthropic API를 사용하여 AI 응답 생성"""
+    """Anthropic API를 직접 HTTP로 호출하여 AI 응답 생성"""
 
     def __init__(self):
-        self.client = None
+        self.api_key = None
         self.model = "claude-3-5-sonnet-20241022"
+        self.api_url = "https://api.anthropic.com/v1/messages"
 
-    def _ensure_client(self):
-        """클라이언트 lazy initialization"""
-        if self.client is None:
+    def _ensure_api_key(self):
+        """API 키 lazy loading"""
+        if self.api_key is None:
             from config import get_settings
             settings = get_settings()
-
-            # 설정에서 API 키 가져오기
-            api_key = settings.anthropic_api_key
-            if not api_key:
+            self.api_key = settings.anthropic_api_key
+            if not self.api_key:
                 raise ValueError("ANTHROPIC_API_KEY 환경변수가 설정되지 않았습니다.")
-
-            self.client = AsyncAnthropic(api_key=api_key)
 
     async def chat(
         self,
@@ -40,21 +38,65 @@ class ClaudeService:
             AI 응답 청크 (스트리밍)
         """
         try:
-            # 클라이언트 초기화 (lazy)
-            self._ensure_client()
+            # API 키 로드
+            self._ensure_api_key()
 
-            # 스트리밍 응답 요청
-            async with self.client.messages.stream(
-                model=self.model,
-                max_tokens=4096,
-                messages=[{
-                    "role": "user",
-                    "content": message
-                }]
-            ) as stream:
-                async for text in stream.text_stream:
-                    yield text
+            # HTTP 요청 헤더
+            headers = {
+                "x-api-key": self.api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json"
+            }
 
+            # 요청 바디
+            payload = {
+                "model": self.model,
+                "max_tokens": 4096,
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": message
+                    }
+                ],
+                "stream": True
+            }
+
+            # 스트리밍 요청
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                async with client.stream(
+                    "POST",
+                    self.api_url,
+                    headers=headers,
+                    json=payload
+                ) as response:
+                    response.raise_for_status()
+
+                    # SSE 스트림 파싱
+                    async for line in response.aiter_lines():
+                        if line.startswith("data: "):
+                            data_str = line[6:]  # "data: " 제거
+
+                            if data_str == "[DONE]":
+                                break
+
+                            try:
+                                data = json.loads(data_str)
+
+                                # 텍스트 델타 추출
+                                if data.get("type") == "content_block_delta":
+                                    delta = data.get("delta", {})
+                                    if delta.get("type") == "text_delta":
+                                        text = delta.get("text", "")
+                                        if text:
+                                            yield text
+
+                            except json.JSONDecodeError:
+                                continue
+
+        except httpx.HTTPStatusError as e:
+            error_detail = f"HTTP {e.response.status_code}: {e.response.text}"
+            print(f"Claude API HTTP Error: {error_detail}")
+            yield f"\n⚠️ API Error: {error_detail}"
         except Exception as e:
             import traceback
             error_detail = traceback.format_exc()
