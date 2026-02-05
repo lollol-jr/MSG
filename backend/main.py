@@ -3,8 +3,18 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from config import get_settings
 from api import auth, chat, history
+import os
 
 settings = get_settings()
+
+# 환경변수 디버깅
+print("=" * 50)
+print("Environment Variables Check:")
+print(f"SUPABASE_URL: {settings.supabase_url[:30]}...")
+print(f"SUPABASE_SERVICE_ROLE_KEY: {settings.supabase_service_role_key[:20]}...")
+print(f"ANTHROPIC_API_KEY: {settings.anthropic_api_key[:20]}...")
+print(f"Environment vars loaded: {len([k for k in os.environ.keys() if 'SUPABASE' in k or 'ANTHROPIC' in k])} found")
+print("=" * 50)
 
 # FastAPI 앱 생성
 app = FastAPI(
