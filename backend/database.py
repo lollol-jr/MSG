@@ -1,9 +1,7 @@
 """Supabase 데이터베이스 연결"""
 from supabase import create_client, Client
-from supabase.lib.client_options import ClientOptions
 from config import get_settings
 from functools import lru_cache
-import httpx
 
 settings = get_settings()
 
@@ -11,36 +9,18 @@ settings = get_settings()
 @lru_cache()
 def get_supabase_client() -> Client:
     """Supabase 클라이언트 싱글톤"""
-    # httpx 클라이언트를 직접 생성 (proxy 옵션 없이)
-    http_client = httpx.Client(timeout=30.0)
-
-    options = ClientOptions(
-        postgrest_client_timeout=30,
-        storage_client_timeout=30
-    )
-
     return create_client(
         settings.supabase_url,
-        settings.supabase_service_role_key,
-        options=options
+        settings.supabase_service_role_key
     )
 
 
 @lru_cache()
 def get_supabase_anon_client() -> Client:
     """Supabase 익명 클라이언트 (프론트엔드용)"""
-    # httpx 클라이언트를 직접 생성 (proxy 옵션 없이)
-    http_client = httpx.Client(timeout=30.0)
-
-    options = ClientOptions(
-        postgrest_client_timeout=30,
-        storage_client_timeout=30
-    )
-
     return create_client(
         settings.supabase_url,
-        settings.supabase_anon_key,
-        options=options
+        settings.supabase_anon_key
     )
 
 
